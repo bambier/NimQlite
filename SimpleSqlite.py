@@ -11,14 +11,13 @@ class DataBase:
 			Gets one string argument wich name is 'database_name'.
 			If there is no argument default is 'db.sqlite3'.
 
-			Database named as 'db' in 'self' and cursor named as 'cursor' in 'self'.
+			Database named as 'db' in 'self'.
 			Also you can use 'execute' for execute costum commands.
 
 			More information in https://docs.python.org/3/library/sqlite3.html#module-sqlite3
 		"""
 		self.db = sqlite3.connect(database_name)
-		self.cursor = self.db.cursor()
-		self.execute = self.cursor.execute
+		self.execute = self.db.cursor.execute
 
 
 	def create_table(self, table_name, columns={}):
