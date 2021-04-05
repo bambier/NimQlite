@@ -13,16 +13,19 @@ class DataBase:
 			If there is no argument default is 'db.sqlite3'.
 
 			Database named as 'db' in 'self' and cursor named as 'cursor' in 'self'.
+			Also you can use 'execute' for execute costum commands.
+
 			More information in https://docs.python.org/3/library/sqlite3.html#module-sqlite3
 		"""
 		self.db = sqlite3.connect(database_name)
 		self.cursor = self.db.cursor()
+		self.execute = self.cursor.execute
 
 
 	def create_table(self, table_name, columns={}):
 		"""
 			Create table in database.
-			Gets one string argument wich name is 'table_name' and sorted in table_name in self also one dictionary in 'columns' with format below :
+			Gets one string argument wich name is 'table_name' and one dictionary in 'columns' with format below :
 							{"<column_name>":{"<data_type>":<UNIQUE : True/False>}}
 					'column_name' must be string and 'data_type' one of options bellow in string format:
 							1.null :
@@ -53,7 +56,7 @@ class DataBase:
 				else:
 					data_set.append(f'{column_name} {data_type[0]}')
 
-			self.cursor.execute("""
+			self.execute("""
 					CREATE TABLE {0} 
 								({1});
 					""".format(table_name, ' , '.join(data_set)))
@@ -66,12 +69,12 @@ class DataBase:
 	def insert_data(self, values):
 		"""
 			Insert a row of data to column in Database.
-					for first argument it receives a list of data according to the order of the columns
-					created by '<create_table>' function for exapmle if colums order is "name" "age" "id"
-					data shoud be "<some name>" "<some age>" "<some id>".
+					for first argument gets table name and for the second argument, it receives a list of
+					data according to the order of the columns created by '<create_table>' function for
+					exapmle if colums order is "name" "age" "id" data shoud be "<some name>" "<some age>" "<some id>".
 					
-					Note that for each new data you sould call function if you have K data with N value
-					function should calld for K series with N value.
+					Note that for each new data you sould call function if you have K data with N value function should
+					calld for K series with N value.
 			
 			If operation was successful returns 'True' else 'False'
 
@@ -89,7 +92,7 @@ class DataBase:
 				else:
 					raise Exception('Invalid data.')
 		
-			self.cursor.execute("""
+			self.execute("""
 				INSERT INTO {0} VALUES ({1});
 			""".format(self.table_name, ' , '.join(data_sets)))
 			return True
@@ -103,27 +106,35 @@ class DataBase:
 			SQLite SELECT statement is used to fetch the data from a SQLite database table which
 			returns data in the form of a result table. These result tables are also called result sets.
 
-			Gets columns name for argument.
-			
-			
+
 			If operation was successful returns '<data>' else 'False'
 
 			More information at https://www.tutorialspoint.com/sqlite/sqlite_select_query.htm
 		"""
 		try:
-			data = list(self.cursor.execute("SELECT {0} FROM {1};".format(' , '.join(column), self.table_name)))
+			data = list(self.execute("SELECT {0} FROM {1};".format(' , '.join(column), self.table_name)))
 			return data
 		except:
 			return False
 
 
 	def select_data_from_and(self, where, column=["*"]):
+		"""
+			SQLite SELECT statement is used to fetch the data from a SQLite database table which
+			returns data in the form of a result table. These result tables are also called result sets.
+
+			Like select_data but with AND operator
+
+			If operation was successful returns '<data>' else 'False'
+
+			More information at https://www.tutorialspoint.com/sqlite/sqlite_select_query.htm
+		"""
 		try:
 			data_sets = []
 			for key , value in where.items():
 				data_sets.append(f"{key} = '{value}'")
 			data = list(
-				self.cursor.execute("""
+				self.execute("""
 							SELECT {0} FROM {1} WHERE {2};
 				""".format(' , '.join(column), self.table_name, ' AND '.join(data_sets)))
 			)
@@ -132,12 +143,22 @@ class DataBase:
 			return False
 
 	def select_data_from_or(self, where, column=["*"]):
+		"""
+			SQLite SELECT statement is used to fetch the data from a SQLite database table which
+			returns data in the form of a result table. These result tables are also called result sets.
+
+			Like select_data but with OR operator
+
+			If operation was successful returns '<data>' else 'False'
+
+			More information at https://www.tutorialspoint.com/sqlite/sqlite_select_query.htm
+		"""
 		try:
 			data_sets = []
 			for key , value in where.items():
 				data_sets.append(f"{key} = '{value}'")
 			data = list(
-				self.cursor.execute("""
+				self.execute("""
 							SELECT {0} FROM {1} WHERE {2};
 				""".format(' , '.join(column), self.table_name, ' OR '.join(data_sets)))
 			)
@@ -149,12 +170,62 @@ class DataBase:
 
 	# conn.execute("UPDATE COMPANY set SALARY = 25000.00 where ID = 1")
 	def update_data(self, wich, where):
+		"""
+			SQLite UPDATE Query is used to modify the existing records in a table.
+			You can use WHERE clause with UPDATE query to update selected rows, otherwise
+			all the rows would be updated.
+
+			this methd recives 2 argument first one is 'wich' that means wich property must be update,
+			second one is 'where' property that means where shuld be chabge.
+			example usage :
+				wich = {"<column name>" : "<new value>", }
+				where = {"<filterd column name>" : "<value>",}
+
+			If operation was successful returns 'True' else 'False'
+		"""
 		try:
-			pass
+			data_sets_where = []
+			for key , value in where.items():
+				data_sets_where.append(f'{key} = {value}')
+			
+			data_sets_wich = []
+			for key, value in wich.items():
+				data_sets_wich.append(f'{key} = {value}')
+			
+			self.execute(f"""
+				UPDATE {self.table_name} SET {' '.join(data_sets_wich)} WHERE {' '.join(data_sets_where)};
+			""")
+			return True
 		except:
 			return False
 
 
+	def delete(self, where):
+		"""
+			SQLite DELETE Query is used to delete the existing records from a table.
+			You can use WHERE clause with DELETE query to delete the selected rows,
+			otherwise all the records would be deleted.
+
+			If operation was successful returns 'True' else 'False'
+
+		"""
+		try:
+			data_sets = []
+			for key , value in where.items():
+				data_sets.append(f'{key} = {value}')
+
+			self.execute(f"""
+				DELETE FROM {self.table_name} WHERE {' '.join(data_sets)};
+			""")
+		except:
+			return False
+
+
+	def execute_command(self, command):
+		try:
+			return self.execute(command)
+		except:
+			return False
 
 
 	def commit(self):
@@ -174,8 +245,6 @@ class DataBase:
 			If operation was successful returns 'True' else 'False'
 		"""
 		self.db.close()
-		
-		
-		
+		return True
 
-		
+
