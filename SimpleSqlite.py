@@ -22,7 +22,7 @@ class DataBase:
 	def create_table(self, table_name, columns={}):
 		"""
 			Create table in database.
-			Gets one string argument wich name is 'table_name' and one dictionary in 'columns' with format below :
+			Gets one string argument wich name is 'table_name' and sorted in table_name in self also one dictionary in 'columns' with format below :
 							{"<column_name>":{"<data_type>":<UNIQUE : True/False>}}
 					'column_name' must be string and 'data_type' one of options bellow in string format:
 							1.null :
@@ -57,20 +57,21 @@ class DataBase:
 					CREATE TABLE {0} 
 								({1});
 					""".format(table_name, ' , '.join(data_set)))
+			self.table_name = table_name
 			return True
 		except:
 			return False
 
 
-	def insert_data(self, table_name, values):
+	def insert_data(self, values):
 		"""
 			Insert a row of data to column in Database.
-					for first argument gets table name and for the second argument, it receives a list of
-					data according to the order of the columns created by '<create_table>' function for
-					exapmle if colums order is "name" "age" "id" data shoud be "<some name>" "<some age>" "<some id>".
+					for first argument it receives a list of data according to the order of the columns
+					created by '<create_table>' function for exapmle if colums order is "name" "age" "id"
+					data shoud be "<some name>" "<some age>" "<some id>".
 					
-					Note that for each new data you sould call function if you have K data with N value function should
-					calld for K series with N value.
+					Note that for each new data you sould call function if you have K data with N value
+					function should calld for K series with N value.
 			
 			If operation was successful returns 'True' else 'False'
 
@@ -90,31 +91,33 @@ class DataBase:
 		
 			self.cursor.execute("""
 				INSERT INTO {0} VALUES ({1});
-			""".format(table_name, ' , '.join(data_sets)))
+			""".format(self.table_name, ' , '.join(data_sets)))
 			return True
 		except:
 			return False
 
 
 
-	def select_data(self, table_name, column=["*"]):
+	def select_data(self, column=["*"]):
 		"""
 			SQLite SELECT statement is used to fetch the data from a SQLite database table which
 			returns data in the form of a result table. These result tables are also called result sets.
 
-
+			Gets columns name for argument.
+			
+			
 			If operation was successful returns '<data>' else 'False'
 
 			More information at https://www.tutorialspoint.com/sqlite/sqlite_select_query.htm
 		"""
 		try:
-			data = list(self.cursor.execute("SELECT {0} FROM {1};".format(' , '.join(column), table_name)))
+			data = list(self.cursor.execute("SELECT {0} FROM {1};".format(' , '.join(column), self.table_name)))
 			return data
 		except:
 			return False
 
 
-	def select_data_from_and(self, table_name, where, column=["*"]):
+	def select_data_from_and(self, where, column=["*"]):
 		try:
 			data_sets = []
 			for key , value in where.items():
@@ -122,13 +125,13 @@ class DataBase:
 			data = list(
 				self.cursor.execute("""
 							SELECT {0} FROM {1} WHERE {2};
-				""".format(' , '.join(column), table_name, ' AND '.join(data_sets)))
+				""".format(' , '.join(column), self.table_name, ' AND '.join(data_sets)))
 			)
 			return data
 		except:
 			return False
 
-	def select_data_from_or(self, table_name, where, column=["*"]):
+	def select_data_from_or(self, where, column=["*"]):
 		try:
 			data_sets = []
 			for key , value in where.items():
@@ -136,11 +139,21 @@ class DataBase:
 			data = list(
 				self.cursor.execute("""
 							SELECT {0} FROM {1} WHERE {2};
-				""".format(' , '.join(column), table_name, ' OR '.join(data_sets)))
+				""".format(' , '.join(column), self.table_name, ' OR '.join(data_sets)))
 			)
 			return data
 		except:
 			return False
+
+
+
+	# conn.execute("UPDATE COMPANY set SALARY = 25000.00 where ID = 1")
+	def update_data(self, wich, where):
+		try:
+			pass
+		except:
+			return False
+
 
 
 
@@ -161,7 +174,8 @@ class DataBase:
 			If operation was successful returns 'True' else 'False'
 		"""
 		self.db.close()
-		return True
+		
+		
+		
 
-
-
+		
