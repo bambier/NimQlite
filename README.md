@@ -1,4 +1,4 @@
-# SimpleSqlite
+# NimQlite
 Simple Python3 sqlite3 controler
 
 This package uses **python SQLITE3** pip.
