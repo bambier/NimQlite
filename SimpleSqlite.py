@@ -5,7 +5,7 @@ import sqlite3
 
 class DataBase:
 
-	def __init__(self, database_name="db.sqlite3"):
+	def __init__(self, database_name=str:"db.sqlite3"):
 		"""
 			Initialize database for connecting.
 			Gets one string argument wich name is 'database_name'.
@@ -20,7 +20,7 @@ class DataBase:
 		self.execute = self.db.cursor.execute
 
 
-	def create_table(self, table_name, columns={}):
+	def create_table(self, table_name:str, columns:dict):
 		"""
 			Create table in database.
 			Gets one string argument wich name is 'table_name' and one dictionary in 'columns' with format below :
@@ -116,7 +116,7 @@ class DataBase:
 			return False
 
 
-	def select_data_from_and(self, where, column=["*"]):
+	def select_data_from_and(self, where:str, column=["*"]):
 		"""
 			SQLite SELECT statement is used to fetch the data from a SQLite database table which
 			returns data in the form of a result table. These result tables are also called result sets.
@@ -140,7 +140,7 @@ class DataBase:
 		except:
 			return False
 
-	def select_data_from_or(self, where, column=["*"]):
+	def select_data_from_or(self, where:str, column=["*"]):
 		"""
 			SQLite SELECT statement is used to fetch the data from a SQLite database table which
 			returns data in the form of a result table. These result tables are also called result sets.
@@ -167,7 +167,7 @@ class DataBase:
 
 
 	# conn.execute("UPDATE COMPANY set SALARY = 25000.00 where ID = 1")
-	def update_data(self, wich, where):
+	def update_data(self, wich:str, where:str):
 		"""
 			SQLite UPDATE Query is used to modify the existing records in a table.
 			You can use WHERE clause with UPDATE query to update selected rows, otherwise
@@ -198,7 +198,7 @@ class DataBase:
 			return False
 
 
-	def delete(self, where):
+	def delete(self, where:str):
 		"""
 			SQLite DELETE Query is used to delete the existing records from a table.
 			You can use WHERE clause with DELETE query to delete the selected rows,
@@ -219,7 +219,7 @@ class DataBase:
 			return False
 
 
-	def execute_command(self, command):
+	def execute_command(self, command:str):
 		try:
 			return self.execute(command)
 		except:
