@@ -5,7 +5,7 @@ import sqlite3
 
 class DataBase:
 
-	def __init__(self, database_name=str:"db.sqlite3"):
+	def __init__(self, database_name:str="db.sqlite3")-> None:
 		"""
 			Initialize database for connecting.
 			Gets one string argument wich name is 'database_name'.
@@ -20,7 +20,7 @@ class DataBase:
 		self.execute = self.db.cursor.execute
 
 
-	def create_table(self, table_name:str, columns:dict):
+	def create_table(self, table_name:str, columns:dict)-> bool:
 		"""
 			Create table in database.
 			Gets one string argument wich name is 'table_name' and one dictionary in 'columns' with format below :
@@ -64,7 +64,7 @@ class DataBase:
 			return False
 
 
-	def insert_data(self, values):
+	def insert_data(self, values:list) ->bool:
 		"""
 			Insert a row of data to column in Database.
 					for first argument gets table name and for the second argument, it receives a list of
@@ -99,7 +99,7 @@ class DataBase:
 
 
 
-	def select_data(self, column=["*"]):
+	def select_data(self, column:list=["*"]):
 		"""
 			SQLite SELECT statement is used to fetch the data from a SQLite database table which
 			returns data in the form of a result table. These result tables are also called result sets.
@@ -116,7 +116,7 @@ class DataBase:
 			return False
 
 
-	def select_data_from_and(self, where:str, column=["*"]):
+	def select_data_from_and(self, where:str, column:list=["*"]):
 		"""
 			SQLite SELECT statement is used to fetch the data from a SQLite database table which
 			returns data in the form of a result table. These result tables are also called result sets.
@@ -167,7 +167,7 @@ class DataBase:
 
 
 	# conn.execute("UPDATE COMPANY set SALARY = 25000.00 where ID = 1")
-	def update_data(self, wich:str, where:str):
+	def update_data(self, wich:str, where:str) -> bool:
 		"""
 			SQLite UPDATE Query is used to modify the existing records in a table.
 			You can use WHERE clause with UPDATE query to update selected rows, otherwise
@@ -198,7 +198,7 @@ class DataBase:
 			return False
 
 
-	def delete(self, where:str):
+	def delete(self, where:str)-> bool:
 		"""
 			SQLite DELETE Query is used to delete the existing records from a table.
 			You can use WHERE clause with DELETE query to delete the selected rows,
@@ -215,6 +215,7 @@ class DataBase:
 			self.execute(f"""
 				DELETE FROM {self.table_name} WHERE {' '.join(data_sets)};
 			""")
+			return True
 		except:
 			return False
 
@@ -226,23 +227,29 @@ class DataBase:
 			return False
 
 
-	def commit(self):
+	def commit(self)->bool:
 		"""
 			Save (commit) the changes.
 
 			If operation was successful returns 'True' else 'False'
 		"""
-		self.db.commit()
-		return True
+		try:
+			self.db.commit()
+			return True
+		except:
+			return False
 	
-	def close(self):
+	def close(self) -> bool:
 		"""
 			We can also close the connection if we are done with it.
 			Just be sure any changes have been committed or they will be lost.
 
 			If operation was successful returns 'True' else 'False'
 		"""
-		self.db.close()
-		return True
+		try:
+			self.db.close()
+			return True
+		except:
+			return False
 
 
