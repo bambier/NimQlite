@@ -1,11 +1,26 @@
 #!/usr/bin/env python
 
 import sqlite3
+import logging
+from uuid import uuid4
+
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 
 
 class DataBase:
 
-	def __init__(self, database_name:str="db.sqlite3")-> None:
+	def __init__(self, database_name:str=f"{uuid4()}.sqlite3")-> None:
 		"""
 			Initialize database for connecting.
 			Gets one string argument wich name is 'database_name'.
@@ -16,8 +31,11 @@ class DataBase:
 
 			More information in https://docs.python.org/3/library/sqlite3.html#module-sqlite3
 		"""
-		self.db = sqlite3.connect(database_name)
-		self.execute = self.db.cursor.execute
+		logging.info(f"{bcolors.OKCYAN}{bcolors.BOLD}[INFO]{bcolors.ENDC} Creating databse")
+		db = sqlite3.connect(database_name)
+		self.db = db
+		self.execute = db.execute
+
 
 
 	def create_table(self, table_name:str, columns:dict)-> bool:
@@ -54,17 +72,16 @@ class DataBase:
 				else:
 					data_set.append(f'{column_name} {data_type[0]}')
 
+			logging.info(f"{bcolors.OKCYAN}{bcolors.BOLD}[INFO]{bcolors.ENDC} Creating table")
 			self.execute("""
 					CREATE TABLE {0} 
 								({1});
 					""".format(table_name, ' , '.join(data_set)))
-			self.table_name = table_name
 			return True
-		except:
+		except Exception as e:
 			return False
 
-
-	def insert_data(self, values:list) ->bool:
+	def insert_data(self, table_name: str, values:list) ->bool:
 		"""
 			Insert a row of data to column in Database.
 					for first argument gets table name and for the second argument, it receives a list of
@@ -90,16 +107,17 @@ class DataBase:
 				else:
 					raise Exception('Invalid data.')
 		
+			logging.info(f"{bcolors.OKCYAN}{bcolors.BOLD}[INFO]{bcolors.ENDC} Inserting data in to database")
 			self.execute("""
 				INSERT INTO {0} VALUES ({1});
-			""".format(self.table_name, ' , '.join(data_sets)))
+			""".format(table_name, ' , '.join(data_sets)))
 			return True
-		except:
+		except Exception as e:
+			logging.error(f"{bcolors.FAIL}{bcolors.BOLD}[ERROR]{bcolors.ENDC} {e}")
 			return False
 
 
-
-	def select_data(self, column:list=["*"]):
+	def select_data(self, table_name: str, column:list=["*"]):
 		"""
 			SQLite SELECT statement is used to fetch the data from a SQLite database table which
 			returns data in the form of a result table. These result tables are also called result sets.
@@ -110,13 +128,14 @@ class DataBase:
 			More information at https://www.tutorialspoint.com/sqlite/sqlite_select_query.htm
 		"""
 		try:
-			data = list(self.execute("SELECT {0} FROM {1};".format(' , '.join(column), self.table_name)))
+			logging.info(f"{bcolors.OKCYAN}{bcolors.BOLD}[INFO]{bcolors.ENDC} Selecting data")
+			data = list(self.execute("SELECT {0} FROM {1};".format(' , '.join(column), table_name)))
 			return data
-		except:
+		except Exception as E:
+			print(E)
 			return False
 
-
-	def select_data_from_and(self, where:str, column:list=["*"]):
+	def select_data_from_and(self, table_name, where:str, column:list=["*"]):
 		"""
 			SQLite SELECT statement is used to fetch the data from a SQLite database table which
 			returns data in the form of a result table. These result tables are also called result sets.
@@ -131,16 +150,18 @@ class DataBase:
 			data_sets = []
 			for key , value in where.items():
 				data_sets.append(f"{key} = '{value}'")
+			logging.info(f"{bcolors.OKCYAN}{bcolors.BOLD}[INFO]{bcolors.ENDC} Selecting data from and")
 			data = list(
 				self.execute("""
 							SELECT {0} FROM {1} WHERE {2};
-				""".format(' , '.join(column), self.table_name, ' AND '.join(data_sets)))
+				""".format(' , '.join(column), table_name, ' AND '.join(data_sets)))
 			)
 			return data
-		except:
+		except Exception as e:
+			logging.error(f"{bcolors.FAIL}{bcolors.BOLD}[ERROR]{bcolors.ENDC} {e}")
 			return False
 
-	def select_data_from_or(self, where:str, column=["*"]):
+	def select_data_from_or(self, table_name, where:str, column=["*"]):
 		"""
 			SQLite SELECT statement is used to fetch the data from a SQLite database table which
 			returns data in the form of a result table. These result tables are also called result sets.
@@ -155,19 +176,21 @@ class DataBase:
 			data_sets = []
 			for key , value in where.items():
 				data_sets.append(f"{key} = '{value}'")
+			logging.info(f"{bcolors.OKCYAN}{bcolors.BOLD}[INFO]{bcolors.ENDC} Selecting from or")
 			data = list(
 				self.execute("""
 							SELECT {0} FROM {1} WHERE {2};
-				""".format(' , '.join(column), self.table_name, ' OR '.join(data_sets)))
+				""".format(' , '.join(column), table_name, ' OR '.join(data_sets)))
 			)
 			return data
-		except:
+		except Exception as e:
+			logging.error(f"{bcolors.FAIL}{bcolors.BOLD}[ERROR]{bcolors.ENDC} {e}")
 			return False
 
 
 
 	# conn.execute("UPDATE COMPANY set SALARY = 25000.00 where ID = 1")
-	def update_data(self, wich:str, where:str) -> bool:
+	def update_data(self, table_name, wich:str, where:str) -> bool:
 		"""
 			SQLite UPDATE Query is used to modify the existing records in a table.
 			You can use WHERE clause with UPDATE query to update selected rows, otherwise
@@ -190,15 +213,17 @@ class DataBase:
 			for key, value in wich.items():
 				data_sets_wich.append(f'{key} = {value}')
 			
+			logging.info(f"{bcolors.OKCYAN}{bcolors.BOLD}[INFO]{bcolors.ENDC} Updating data")
 			self.execute(f"""
-				UPDATE {self.table_name} SET {' '.join(data_sets_wich)} WHERE {' '.join(data_sets_where)};
+				UPDATE {table_name} SET {' '.join(data_sets_wich)} WHERE {' '.join(data_sets_where)};
 			""")
 			return True
-		except:
+		except Exception as e:
+			logging.error(f"{bcolors.FAIL}{bcolors.BOLD}[ERROR]{bcolors.ENDC} {e}")
 			return False
 
 
-	def delete(self, where:str)-> bool:
+	def delete(self, table_name, where:str)-> bool:
 		"""
 			SQLite DELETE Query is used to delete the existing records from a table.
 			You can use WHERE clause with DELETE query to delete the selected rows,
@@ -212,20 +237,22 @@ class DataBase:
 			for key , value in where.items():
 				data_sets.append(f'{key} = {value}')
 
+			logging.info(f"{bcolors.OKCYAN}{bcolors.BOLD}[INFO]{bcolors.ENDC} Deleting data")
 			self.execute(f"""
-				DELETE FROM {self.table_name} WHERE {' '.join(data_sets)};
+				DELETE FROM {table_name} WHERE {' '.join(data_sets)};
 			""")
 			return True
-		except:
+		except Exception as e:
+			logging.error(f"{bcolors.FAIL}{bcolors.BOLD}[ERROR]{bcolors.ENDC} {e}")
 			return False
 
-
-	def execute_command(self, command:str):
+	def execute_command(self, table_name, command:str):
 		try:
+			logging.info(f"{bcolors.OKCYAN}{bcolors.BOLD}[INFO]{bcolors.ENDC} Executing data")
 			return self.execute(command)
-		except:
+		except Exception as e:
+			logging.error(f"{bcolors.FAIL}{bcolors.BOLD}[ERROR]{bcolors.ENDC} {e}")
 			return False
-
 
 	def commit(self)->bool:
 		"""
@@ -234,11 +261,12 @@ class DataBase:
 			If operation was successful returns 'True' else 'False'
 		"""
 		try:
+			logging.info(f"{bcolors.OKCYAN}{bcolors.BOLD}[INFO]{bcolors.ENDC} Commiting data")
 			self.db.commit()
 			return True
-		except:
+		except Exception as e:
+			logging.error(f"{bcolors.FAIL}{bcolors.BOLD}[ERROR]{bcolors.ENDC} {e}")
 			return False
-	
 	def close(self) -> bool:
 		"""
 			We can also close the connection if we are done with it.
@@ -247,9 +275,10 @@ class DataBase:
 			If operation was successful returns 'True' else 'False'
 		"""
 		try:
+			logging.info(f"{bcolors.OKCYAN}{bcolors.BOLD}[INFO]{bcolors.ENDC} CLosing database")
 			self.db.close()
 			return True
-		except:
+		except Exception as e:
+			logging.error(f"{bcolors.FAIL}{bcolors.BOLD}[ERROR]{bcolors.ENDC} {e}")
 			return False
-
 
